@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AyurCosmetics | Where Ayurveda Meets K-Beauty</title>
+    
+    <!-- Fonts: Playfair Display for a luxurious/classic feel, Inter for modern clean text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        ayur: {
+                            green: '#2A5C43',
+                            lightgreen: '#E8F3ED',
+                            gold: '#D4AF37',
+                            pink: '#FDF2F4',
+                            dark: '#050A08', // Deeper dark base
+                            glass: 'rgba(255, 255, 255, 0.03)',
+                            glassBorder: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Glassmorphism Utilities */
+        .glass-nav {
+            background: rgba(5, 10, 8, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-panel {
+            background: var(--tw-colors-ayur-glass, rgba(255, 255, 255, 0.03));
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--tw-colors-ayur-glassBorder, rgba(255, 255, 255, 0.08));
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Slider Styles */
+        .slide {
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+            transform: scale(1.05);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            z-index: 10;
+        }
+        
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #D4AF37; /* High contrast gold */
+            color: #000;
+            text-align: center;
+            border-radius: 12px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s, visibility 0.3s;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            font-weight: 600;
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+
+        /* FAQ Accordion */
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050A08; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A5C43; 
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37; 
+        }
+    </style>
+</head>
+
+<body class="font-sans text-gray-300 antialiased bg-ayur-dark relative selection:bg-ayur-gold selection:text-black overflow-x-hidden">
+
+    <!-- Background Ambient Orbs for Glassmorphism Effect -->
+    <div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-ayur-green/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-ayur-gold/10 rounded-full blur-[100px]"></div>
+        <div class="absolute top-[40%] left-[60%] w-[30vw] h-[30vw] bg-emerald-900/20 rounded-full blur-[90px]"></div>
+    </div>
+
+    <!-- Navigation -->
+    <header class="fixed w-full top-0 z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <span class="font-serif text-2xl font-bold text-white tracking-tight drop-shadow-md">Ayur<span class="text-ayur-gold font-sans font-light">Cosmetics</span></span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#philosophy" class="text-gray-300 hover:text-ayur-gold font-medium transition-colors drop-shadow-sm">Our Philosophy</a>
+                    <a href="#products" class="text-gray-300 hover:text-ayur-gold font-medium transition-colors drop-shadow-sm">Shop Products</a>
+                    <a href="#testimonials" class="text-gray-300 hover:text-ayur-gold font-medium transition-colors drop-shadow-sm">Reviews</a>
+                    <a href="#faq" class="text-gray-300 hover:text-ayur-gold font-medium transition-colors drop-shadow-sm">FAQ</a>
+                </nav>
+
+                <!-- Icons -->
+                <div class="flex items-center space-x-5">
+                    <button class="text-gray-300 hover:text-ayur-gold transition-colors relative">
+                        <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <span id="cart-badge" class="absolute -top-2 -right-2 bg-ayur-gold text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center opacity-0 transition-opacity shadow-lg">0</span>
+                    </button>
+                    <!-- Mobile menu button -->
+                    <button id="mobile-menu-btn" class="md:hidden text-gray-300 hover:text-ayur-gold focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 z-[100] bg-[#050A08]/95 backdrop-blur-2xl opacity-0 pointer-events-none transition-opacity duration-300 flex flex-col items-center justify-center space-y-8 md:hidden">
+        <button id="close-menu-btn" class="absolute top-8 right-8 text-gray-300 hover:text-ayur-gold text-3xl focus:outline-none">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <a href="#philosophy" class="mobile-link text-3xl font-serif text-white hover:text-ayur-gold transition-colors">Our Philosophy</a>
+        <a href="#products" class="mobile-link text-3xl font-serif text-white hover:text-ayur-gold transition-colors">Shop Products</a>
+        <a href="#testimonials" class="mobile-link text-3xl font-serif text-white hover:text-ayur-gold transition-colors">Reviews</a>
+        <a href="#faq" class="mobile-link text-3xl font-serif text-white hover:text-ayur-gold transition-colors">FAQ</a>
+    </div>
+
+    <!-- Hero Slider Section -->
+    <section id="hero-slider-section" class="relative h-screen w-full overflow-hidden bg-black pt-20">
+        
+        <!-- Slide 1 -->
+        <div class="slide active bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(5,10,8,0.9), rgba(5,10,8,0.3)), url('https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=2000&auto=format&fit=crop');">
+            <div class="absolute inset-0 flex flex-col justify-center items-start text-left px-8 md:px-16 lg:px-24 max-w-7xl mx-auto">
+                <span class="text-ayur-gold font-sans tracking-[0.3em] uppercase text-sm md:text-md mb-4 drop-shadow-lg font-semibold">A New Era of Skincare</span>
+                <h1 class="text-5xl md:text-6xl lg:text-8xl font-serif text-white font-bold mb-6 drop-shadow-2xl leading-tight">
+                    Where Ayurveda <br><span class="italic font-light text-gray-200">Meets K-Beauty</span>
+                </h1>
+                <p class="text-lg md:text-2xl text-gray-300 max-w-2xl mb-10 font-light drop-shadow-md">
+                    Discover the secret to flawless, glowing skin with our fusion of ancient Indian botanicals and advanced Korean skincare technology.
+                </p>
+                <!-- High Contrast CTA -->
+                <a href="#products" class="bg-ayur-gold hover:bg-yellow-400 text-black px-8 py-4 rounded-full font-bold transition-all transform hover:-translate-y-1 shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3">
+                    Shop The Collection <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="slide bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(5,10,8,0.9), rgba(5,10,8,0.3)), url('https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=2000&auto=format&fit=crop');">
+            <div class="absolute inset-0 flex flex-col justify-center items-start text-left px-8 md:px-16 lg:px-24 max-w-7xl mx-auto">
+                <span class="text-ayur-gold font-sans tracking-[0.3em] uppercase text-sm md:text-md mb-4 drop-shadow-lg font-semibold">Nature's Purest</span>
+                <h1 class="text-5xl md:text-6xl lg:text-8xl font-serif text-white font-bold mb-6 drop-shadow-2xl leading-tight">
+                    Harnessing the Power <br><span class="italic font-light text-gray-200">of Botanicals</span>
+                </h1>
+                <p class="text-lg md:text-2xl text-gray-300 max-w-2xl mb-10 font-light drop-shadow-md">
+                    Infused with Saffron, Sandalwood, and Centella Asiatica for deep healing and radiant beauty.
+                </p>
+                <!-- High Contrast CTA -->
+                <a href="#philosophy" class="bg-white hover:bg-gray-200 text-black px-8 py-4 rounded-full font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center gap-3">
+                    Discover Our Philosophy
+                </a>
+            </div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="slide bg-cover bg-top" style="background-image: linear-gradient(to right, rgba(5,10,8,0.9), rgba(5,10,8,0.3)), url('https://images.unsplash.com/photo-1509967419530-da38b4704bc6?q=80&w=2000&auto=format&fit=crop');">
+            <div class="absolute inset-0 flex flex-col justify-center items-start text-left px-8 md:px-16 lg:px-24 max-w-7xl mx-auto">
+                <span class="text-ayur-gold font-sans tracking-[0.3em] uppercase text-sm md:text-md mb-4 drop-shadow-lg font-semibold">The Ayurveda Glow</span>
+                <h1 class="text-5xl md:text-6xl lg:text-8xl font-serif text-white font-bold mb-6 drop-shadow-2xl leading-tight">
+                    Timeless Secrets <br><span class="italic font-light text-gray-200">Modern Efficacy</span>
+                </h1>
+                <p class="text-lg md:text-2xl text-gray-300 max-w-2xl mb-10 font-light drop-shadow-md">
+                    Unlock centuries of Indian beauty wisdom, refined for today's dynamic lifestyle and all skin types.
+                </p>
+                <a href="#products" class="bg-ayur-gold hover:bg-yellow-400 text-black px-8 py-4 rounded-full font-bold transition-all transform hover:-translate-y-1 shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3">
+                    Explore Routines <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="slide bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(5,10,8,0.9), rgba(5,10,8,0.3)), url('https://images.unsplash.com/photo-1526379095098-d400fd0bfce8?q=80&w=2000&auto=format&fit=crop');">
+            <div class="absolute inset-0 flex flex-col justify-center items-start text-left px-8 md:px-16 lg:px-24 max-w-7xl mx-auto">
+                <span class="text-ayur-gold font-sans tracking-[0.3em] uppercase text-sm md:text-md mb-4 drop-shadow-lg font-semibold">K-Beauty Perfection</span>
+                <h1 class="text-5xl md:text-6xl lg:text-8xl font-serif text-white font-bold mb-6 drop-shadow-2xl leading-tight">
+                    Glass Skin <br><span class="italic font-light text-gray-200">Made Attainable</span>
+                </h1>
+                <p class="text-lg md:text-2xl text-gray-300 max-w-2xl mb-10 font-light drop-shadow-md">
+                    Experience lightweight textures and deep hydration inspired by Seoul's top estheticians.
+                </p>
+                <a href="#philosophy" class="bg-white hover:bg-gray-200 text-black px-8 py-4 rounded-full font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center gap-3">
+                    Learn The Science
+                </a>
+            </div>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="slide bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(5,10,8,0.9), rgba(5,10,8,0.3)), url('https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=2000&auto=format&fit=crop');">
+            <div class="absolute inset-0 flex flex-col justify-center items-start text-left px-8 md:px-16 lg:px-24 max-w-7xl mx-auto">
+                <span class="text-ayur-gold font-sans tracking-[0.3em] uppercase text-sm md:text-md mb-4 drop-shadow-lg font-semibold">Redefining Luxury</span>
+                <h1 class="text-5xl md:text-6xl lg:text-8xl font-serif text-white font-bold mb-6 drop-shadow-2xl leading-tight">
+                    Your Daily <br><span class="italic font-light text-gray-200">Glow Ritual</span>
+                </h1>
+                <p class="text-lg md:text-2xl text-gray-300 max-w-2xl mb-10 font-light drop-shadow-md">
+                    Elevate your self-care routine with formulations that nourish the skin and the soul.
+                </p>
+                <a href="#products" class="bg-ayur-gold hover:bg-yellow-400 text-black px-8 py-4 rounded-full font-bold transition-all transform hover:-translate-y-1 shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center gap-3">
+                    Start Your Journey <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Slider Controls (Glass) -->
+        <button id="prevSlide" class="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-ayur-gold transition-colors w-14 h-14 flex items-center justify-center rounded-full glass-panel border-none">
+            <i class="fa-solid fa-chevron-left text-xl"></i>
+        </button>
+        <button id="nextSlide" class="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white hover:text-ayur-gold transition-colors w-14 h-14 flex items-center justify-center rounded-full glass-panel border-none">
+            <i class="fa-solid fa-chevron-right text-xl"></i>
+        </button>
+
+        <!-- Slider Dots -->
+        <div class="absolute bottom-10 left-0 right-0 z-20 flex justify-center space-x-3" id="slider-dots">
+            <button class="w-3 h-3 rounded-full bg-ayur-gold transition-all duration-300 shadow-[0_0_10px_rgba(212,175,55,0.8)]"></button>
+            <button class="w-3 h-3 rounded-full bg-white/30 hover:bg-white transition-all duration-300"></button>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                
+                <div class="p-8 glass-panel rounded-3xl">
+                    <div class="w-16 h-16 mx-auto bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 text-ayur-gold shadow-inner">
+                        <i class="fa-solid fa-leaf text-2xl drop-shadow-md"></i>
+                    </div>
+                    <h3 class="font-serif font-bold text-xl text-white mb-3 tracking-wide">100% Natural</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Sourced directly from organic farms across India.</p>
+                </div>
+
+                <div class="p-8 glass-panel rounded-3xl">
+                    <div class="w-16 h-16 mx-auto bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 text-ayur-gold shadow-inner">
+                        <i class="fa-solid fa-flask text-2xl drop-shadow-md"></i>
+                    </div>
+                    <h3 class="font-serif font-bold text-xl text-white mb-3 tracking-wide">K-Beauty Tech</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Formulated with advanced Korean extraction techniques.</p>
+                </div>
+
+                <div class="p-8 glass-panel rounded-3xl">
+                    <div class="w-16 h-16 mx-auto bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 text-ayur-gold shadow-inner">
+                        <i class="fa-solid fa-paw text-2xl drop-shadow-md"></i>
+                    </div>
+                    <h3 class="font-serif font-bold text-xl text-white mb-3 tracking-wide">Cruelty-Free</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Never tested on animals. Ethical and compassionate.</p>
+                </div>
+
+                <div class="p-8 glass-panel rounded-3xl">
+                    <div class="w-16 h-16 mx-auto bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 text-ayur-gold shadow-inner">
+                        <i class="fa-solid fa-droplet text-2xl drop-shadow-md"></i>
+                    </div>
+                    <h3 class="font-serif font-bold text-xl text-white mb-3 tracking-wide">Glass Skin Glow</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Designed to deliver ultimate hydration and radiance.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Philosophy Section -->
+    <section id="philosophy" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row items-center gap-16 glass-panel rounded-[3rem] p-8 md:p-12 border border-white/10">
+                <!-- Image side -->
+                <div class="w-full lg:w-1/2 relative">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-ayur-gold/20 to-transparent rounded-3xl blur-xl"></div>
+                    <img src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?q=80&w=1000&auto=format&fit=crop" 
+                         alt="Ayurvedic herbs and cosmetic bottles" 
+                         class="rounded-3xl shadow-2xl relative z-10 w-full object-cover h-64 md:h-[500px] border border-white/10"
+                         onerror="this.src='https://placehold.co/600x800/050A08/D4AF37?text=Philosophy+Image'">
+                </div>
+                
+                <!-- Text side -->
+                <div class="w-full lg:w-1/2">
+                    <span class="text-ayur-gold font-semibold tracking-[0.2em] uppercase text-sm drop-shadow-sm">Our Philosophy</span>
+                    <h2 class="mt-4 text-4xl md:text-5xl font-serif font-bold text-white leading-tight drop-shadow-md">
+                        The Wisdom of India.<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-500">The Science of Korea.</span>
+                    </h2>
+                    <p class="mt-8 text-gray-300 leading-relaxed text-lg">
+                        At AyurCosmetics, we noticed a gap in the beauty industry. Traditional Ayurvedic remedies were potent but often lacked the lightweight, elegant textures modern consumers love. Korean beauty products had phenomenal textures, but missed the deep-rooted herbal wisdom of India.
+                    </p>
+                    <p class="mt-6 text-gray-300 leading-relaxed text-lg">
+                        So, we combined them. We extract ancient Indian botanicals using state-of-the-art Korean fermentation technology. The result? Skincare that absorbs instantly, repairs deeply, and gives you that coveted glow.
+                    </p>
+                    <div class="mt-12 flex gap-10">
+                        <div>
+                            <h4 class="text-4xl font-serif text-ayur-gold font-bold drop-shadow-md">10+</h4>
+                            <span class="text-sm text-gray-400 uppercase tracking-wider font-semibold mt-1 block">Active Herbs</span>
+                        </div>
+                        <div class="w-px bg-white/20"></div>
+                        <div>
+                            <h4 class="text-4xl font-serif text-ayur-gold font-bold drop-shadow-md">3</h4>
+                            <span class="text-sm text-gray-400 uppercase tracking-wider font-semibold mt-1 block">Core Products</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-20">
+                <span class="text-ayur-gold font-semibold tracking-[0.2em] uppercase text-sm drop-shadow-sm">The Core Routine</span>
+                <h2 class="mt-4 text-4xl md:text-5xl font-serif font-bold text-white drop-shadow-md">Your Daily Glow Ritual</h2>
+                <p class="mt-6 text-gray-400 text-lg">Three masterfully crafted products. Everything you need, nothing you don't.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                
+                <!-- Product 1: Facewash -->
+                <div class="glass-panel rounded-[2rem] p-6 flex flex-col h-full group">
+                    <div class="relative overflow-hidden rounded-2xl mb-8 bg-white/5 border border-white/5 pt-6 px-6 pb-0 flex-shrink-0 h-64 flex justify-center items-end">
+                        <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=600&auto=format&fit=crop" 
+                             alt="Kumkumadi Facewash" 
+                             class="h-56 w-auto object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 drop-shadow-2xl"
+                             onerror="this.src='https://placehold.co/400x400/0B120F/D4AF37?text=Facewash'">
+                        <span class="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-bold px-4 py-1.5 rounded-full">Step 1: Cleanse</span>
+                    </div>
+                    <!-- Fixed overlap by using flex-grow and proper margins instead of fixed heights -->
+                    <div class="flex-grow flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-serif font-bold text-2xl text-white leading-tight">Kumkumadi & Cica<br>Hydrating Facewash</h3>
+                            <span class="font-sans font-bold text-ayur-gold text-xl">₹499</span>
+                        </div>
+                        <p class="text-base text-gray-400 mb-8 flex-grow leading-relaxed">A gentle, non-stripping gel cleanser that removes impurities while Saffron brightens and Korean Cica calms inflammation.</p>
+                        
+                        <!-- High Contrast CTA -->
+                        <button onclick="addToCart('Kumkumadi Facewash')" class="w-full bg-ayur-gold text-black hover:bg-yellow-400 py-4 rounded-xl font-bold transition-all mt-auto shadow-[0_4px_14px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_20px_rgba(212,175,55,0.5)]">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product 2: Sunscreen (Bestseller) -->
+                <div class="glass-panel rounded-[2rem] p-6 flex flex-col h-full group relative border-ayur-gold/30 shadow-[0_0_30px_rgba(212,175,55,0.1)]">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-ayur-gold text-black text-sm font-bold px-6 py-1.5 rounded-full z-10 shadow-[0_0_15px_rgba(212,175,55,0.5)] tracking-wide">BESTSELLER</div>
+                    <div class="relative overflow-hidden rounded-2xl mb-8 bg-white/5 border border-white/5 pt-6 px-6 pb-0 flex-shrink-0 h-64 flex justify-center items-end">
+                        <img src="https://images.unsplash.com/photo-1556228720-1c276f620c9e?q=80&w=600&auto=format&fit=crop" 
+                             alt="Rice Water Sunscreen" 
+                             class="h-56 w-auto object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 drop-shadow-2xl"
+                             onerror="this.src='https://placehold.co/400x400/0B120F/D4AF37?text=Sunscreen'">
+                        <span class="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-bold px-4 py-1.5 rounded-full">Step 2: Protect</span>
+                    </div>
+                    <!-- Fixed overlap -->
+                    <div class="flex-grow flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-serif font-bold text-2xl text-white leading-tight">Rice Water & Aloe<br>Sunscreen SPF 50+</h3>
+                            <span class="font-sans font-bold text-ayur-gold text-xl">₹699</span>
+                        </div>
+                        <p class="text-base text-gray-400 mb-8 flex-grow leading-relaxed">Zero white-cast, watery-essence formula. Fermented rice water gives glass-skin finish while providing PA++++ broad spectrum protection.</p>
+                        
+                        <!-- High Contrast CTA -->
+                        <button onclick="addToCart('Rice Water Sunscreen')" class="w-full bg-ayur-gold text-black hover:bg-yellow-400 py-4 rounded-xl font-bold transition-all mt-auto shadow-[0_4px_14px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_20px_rgba(212,175,55,0.5)]">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product 3: Moisturizer -->
+                <div class="glass-panel rounded-[2rem] p-6 flex flex-col h-full group">
+                    <div class="relative overflow-hidden rounded-2xl mb-8 bg-white/5 border border-white/5 pt-6 px-6 pb-0 flex-shrink-0 h-64 flex justify-center items-end">
+                        <img src="https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=600&auto=format&fit=crop" 
+                             alt="Sandalwood Moisturizer" 
+                             class="h-56 w-auto object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 drop-shadow-2xl"
+                             onerror="this.src='https://placehold.co/400x400/0B120F/D4AF37?text=Moisturizer'">
+                        <span class="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-bold px-4 py-1.5 rounded-full">Step 3: Nourish</span>
+                    </div>
+                    <!-- Fixed overlap -->
+                    <div class="flex-grow flex flex-col">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-serif font-bold text-2xl text-white leading-tight">Sandalwood & Mucin<br>Repair Moisturizer</h3>
+                            <span class="font-sans font-bold text-ayur-gold text-xl">₹899</span>
+                        </div>
+                        <p class="text-base text-gray-400 mb-8 flex-grow leading-relaxed">Deeply repairing cream. Pure Mysore Sandalwood heals blemishes while vegan Snail Mucin alternative plumps the skin barrier.</p>
+                        
+                        <!-- High Contrast CTA -->
+                        <button onclick="addToCart('Sandalwood Moisturizer')" class="w-full bg-ayur-gold text-black hover:bg-yellow-400 py-4 rounded-xl font-bold transition-all mt-auto shadow-[0_4px_14px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_20px_rgba(212,175,55,0.5)]">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <i class="fa-solid fa-quote-left text-5xl text-ayur-gold/30 mb-6 block drop-shadow-md"></i>
+                <h2 class="text-4xl md:text-5xl font-serif font-bold text-white drop-shadow-md">Real Skin, Real Results</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Review 1 -->
+                <div class="glass-panel p-8 rounded-[2rem] relative">
+                    <div class="flex text-ayur-gold text-sm mb-6 drop-shadow-md">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 mb-8 italic leading-relaxed text-lg">"I've always loved Ayurvedic ingredients but hated the heavy feel. The Sunscreen is a game-changer! It literally feels like water and leaves no white cast."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="w-14 h-14 bg-gray-800 rounded-full overflow-hidden border-2 border-ayur-gold/50">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" alt="Priya S." class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-lg">Priya S.</h4>
+                            <span class="text-sm text-ayur-gold">Mumbai</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="glass-panel p-8 rounded-[2rem] relative">
+                    <div class="flex text-ayur-gold text-sm mb-6 drop-shadow-md">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-gray-300 mb-8 italic leading-relaxed text-lg">"The Kumkumadi Facewash cleared my active acne in two weeks. My skin feels so plump and hydrated, not tight like other cleansers."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="w-14 h-14 bg-gray-800 rounded-full overflow-hidden border-2 border-ayur-gold/50">
+                            <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=200&auto=format&fit=crop" alt="Ananya R." class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-lg">Ananya R.</h4>
+                            <span class="text-sm text-ayur-gold">Delhi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="glass-panel p-8 rounded-[2rem] relative">
+                    <div class="flex text-ayur-gold text-sm mb-6 drop-shadow-md">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                    </div>
+                    <p class="text-gray-300 mb-8 italic leading-relaxed text-lg">"The Sandalwood Moisturizer smells divine. It absorbs instantly, giving me that glass skin look under makeup without looking greasy at all."</p>
+                    <div class="flex items-center gap-4 mt-auto">
+                        <div class="w-14 h-14 bg-gray-800 rounded-full overflow-hidden border-2 border-ayur-gold/50">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop" alt="Riya M." class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-white text-lg">Riya M.</h4>
+                            <span class="text-sm text-ayur-gold">Bangalore</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-24 relative z-10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-serif font-bold text-white drop-shadow-md">Frequently Asked Questions</h2>
+                <p class="mt-6 text-gray-400 text-lg">Everything you need to know about AyurCosmetics.</p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <button class="faq-btn w-full px-8 py-6 text-left flex justify-between items-center focus:outline-none hover:bg-white/5 transition-colors">
+                        <span class="font-bold text-lg text-white">Are your products suitable for sensitive skin?</span>
+                        <i class="fa-solid fa-plus text-ayur-gold transition-transform duration-300 transform text-xl"></i>
+                    </button>
+                    <div class="faq-answer px-8 bg-black/20">
+                        <p class="py-6 text-gray-300 leading-relaxed border-t border-white/10">Absolutely. We use soothing Ayurvedic herbs like Centella Asiatica (Cica) and Aloe Vera specifically targeted at reducing inflammation and repairing the skin barrier. All products are dermatologically tested.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <button class="faq-btn w-full px-8 py-6 text-left flex justify-between items-center focus:outline-none hover:bg-white/5 transition-colors">
+                        <span class="font-bold text-lg text-white">Is AyurCosmetics a 100% Indian brand?</span>
+                        <i class="fa-solid fa-plus text-ayur-gold transition-transform duration-300 transform text-xl"></i>
+                    </button>
+                    <div class="faq-answer px-8 bg-black/20">
+                        <p class="py-6 text-gray-300 leading-relaxed border-t border-white/10">Yes! We are proudly formulated and manufactured in India. We source our base herbs locally from organic farms across the country, while utilizing Korean manufacturing techniques for the final formulation.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <button class="faq-btn w-full px-8 py-6 text-left flex justify-between items-center focus:outline-none hover:bg-white/5 transition-colors">
+                        <span class="font-bold text-lg text-white">Does the sunscreen leave a white cast?</span>
+                        <i class="fa-solid fa-plus text-ayur-gold transition-transform duration-300 transform text-xl"></i>
+                    </button>
+                    <div class="faq-answer px-8 bg-black/20">
+                        <p class="py-6 text-gray-300 leading-relaxed border-t border-white/10">No. Our Rice Water Sunscreen uses hybrid UV filters encapsulated in a water-essence base. It goes on completely clear on all Indian skin tones and leaves a dewy, glowing finish.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <button class="faq-btn w-full px-8 py-6 text-left flex justify-between items-center focus:outline-none hover:bg-white/5 transition-colors">
+                        <span class="font-bold text-lg text-white">What is the shipping time within India?</span>
+                        <i class="fa-solid fa-plus text-ayur-gold transition-transform duration-300 transform text-xl"></i>
+                    </button>
+                    <div class="faq-answer px-8 bg-black/20">
+                        <p class="py-6 text-gray-300 leading-relaxed border-t border-white/10">We offer free express shipping across India. Metro cities deliver within 2-3 business days, while other regions take about 4-6 business days.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black/80 backdrop-blur-md border-t border-white/10 pt-20 pb-10 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                
+                <!-- Brand -->
+                <div class="col-span-1 lg:col-span-1">
+                    <span class="font-serif text-3xl font-bold text-ayur-gold tracking-tight block mb-6 drop-shadow-md">Ayur<span class="text-white font-sans font-light">Cosmetics</span></span>
+                    <p class="text-gray-400 mb-8 leading-relaxed">Where the ancient wisdom of Indian Ayurveda meets the advanced formulation of Korean beauty.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-ayur-gold hover:text-black transition-all hover:scale-110"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-ayur-gold hover:text-black transition-all hover:scale-110"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-ayur-gold hover:text-black transition-all hover:scale-110"><i class="fa-brands fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="font-bold text-xl mb-6 text-white">Shop</h4>
+                    <ul class="space-y-4 text-gray-400">
+                        <li><a href="#" class="hover:text-ayur-gold transition-colors block">Kumkumadi Facewash</a></li>
+                        <li><a href="#" class="hover:text-ayur-gold transition-colors block">Rice Water Sunscreen</a></li>
+                        <li><a href="#" class="hover:text-ayur-gold transition-colors block">Sandalwood Moisturizer</a></li>
+                        <li><a href="#" class="hover:text-ayur-gold transition-colors block">Gift Sets</a></li>
+                    </ul>
+                </div>
+
+                <!-- Info -->
+                <div>
+                    <h4 class="font-bold text-xl mb-6 text-white">Information</h4>
+                    <ul class="space-y-4 text-gray-400">
+                        <li><a href="#philosophy" class="hover:text-ayur-gold transition-colors block">Our Story</a></li>
+                        <li><a href="#faq" class="hover:text-ayur-gold transition-colors block">FAQ</a></li>
+                        <li><a href="#" class="hover:text-ayur-gold transition-colors block">Shipping & Returns</a></li>
+                        <li><a href="#" class="hover:text-ayur-gold transition-colors block">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <!-- Newsletter -->
+                <div>
+                    <h4 class="font-bold text-xl mb-6 text-white">Join the Glow Club</h4>
+                    <p class="text-gray-400 mb-6 leading-relaxed">Subscribe for 10% off your first order and exclusive K-Ayurveda beauty tips.</p>
+                    <form onsubmit="event.preventDefault(); showToast('Subscribed successfully!');" class="flex flex-col gap-3">
+                        <input type="email" placeholder="Your email address" required class="glass-panel border-white/20 rounded-xl px-5 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-ayur-gold focus:ring-1 focus:ring-ayur-gold transition-all">
+                        <button type="submit" class="bg-ayur-gold text-black font-bold rounded-xl px-5 py-3 hover:bg-yellow-400 transition-all shadow-lg">Subscribe</button>
+                    </form>
+                </div>
+
+            </div>
+            
+            <div class="border-t border-white/10 pt-8 text-center text-gray-500 flex flex-col md:flex-row justify-between items-center">
+                <p>&copy; 2026 AyurCosmetics India. All rights reserved.</p>
+                <div class="space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-gray-300 transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-gray-300 transition-colors">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast">Item added to cart!</div>
+
+    <!-- Scripts -->
+    <script>
+        // 1. Hero Slider Logic
+        const slides = document.querySelectorAll('.slide');
+        const dotsContainer = document.getElementById('slider-dots');
+        let currentSlide = 0;
+        let slideInterval;
+
+        // Generate dots dynamically
+        dotsContainer.innerHTML = '';
+        slides.forEach((_, index) => {
+            const dot = document.createElement('button');
+            dot.className = `w-3 h-3 rounded-full transition-all duration-300 ${index === 0 ? 'bg-ayur-gold w-8 shadow-[0_0_10px_rgba(212,175,55,0.8)]' : 'bg-white/30 hover:bg-white'}`;
+            dot.onclick = () => goToSlide(index);
+            dotsContainer.appendChild(dot);
+        });
+        const dots = dotsContainer.querySelectorAll('button');
+
+        function goToSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('bg-ayur-gold', 'w-8', 'shadow-[0_0_10px_rgba(212,175,55,0.8)]');
+            dots[currentSlide].classList.add('bg-white/30');
+            
+            currentSlide = (n + slides.length) % slides.length;
+            
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.remove('bg-white/30');
+            dots[currentSlide].classList.add('bg-ayur-gold', 'w-8', 'shadow-[0_0_10px_rgba(212,175,55,0.8)]');
+            resetInterval();
+        }
+
+        function nextSlide() { goToSlide(currentSlide + 1); }
+        function prevSlide() { goToSlide(currentSlide - 1); }
+
+        document.getElementById('nextSlide').addEventListener('click', nextSlide);
+        document.getElementById('prevSlide').addEventListener('click', prevSlide);
+
+        function resetInterval() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
+        }
+        resetInterval();
+
+        // 1.5 Swipe Support for Mobile Hero Slider
+        const sliderSection = document.getElementById('hero-slider-section');
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        sliderSection.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        sliderSection.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                nextSlide(); // Swiped left
+            }
+            if (touchEndX > touchStartX + 50) {
+                prevSlide(); // Swiped right
+            }
+        }
+
+        // 2. FAQ Accordion Logic
+        const faqBtns = document.querySelectorAll('.faq-btn');
+        faqBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const answer = this.nextElementSibling;
+                const icon = this.querySelector('i');
+                
+                // Close all others
+                document.querySelectorAll('.faq-answer').forEach(el => {
+                    if (el !== answer) {
+                        el.style.maxHeight = null;
+                        el.previousElementSibling.querySelector('i').classList.remove('rotate-45');
+                    }
+                });
+
+                // Toggle current
+                if (answer.style.maxHeight) {
+                    answer.style.maxHeight = null;
+                    icon.classList.remove('rotate-45');
+                } else {
+                    answer.style.maxHeight = answer.scrollHeight + "px";
+                    icon.classList.add('rotate-45');
+                }
+            });
+        });
+
+        // 3. Cart Logic & Toast Notification
+        let cartCount = 0;
+        const cartBadge = document.getElementById('cart-badge');
+        const toast = document.getElementById('toast');
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.className = "show";
+            setTimeout(() => {
+                toast.className = toast.className.replace("show", "");
+            }, 3000);
+        }
+
+        function addToCart(productName) {
+            cartCount++;
+            cartBadge.textContent = cartCount;
+            cartBadge.classList.remove('opacity-0');
+            
+            // Animation bump on badge
+            cartBadge.classList.add('scale-125');
+            setTimeout(() => cartBadge.classList.remove('scale-125'), 200);
+
+            showToast(`Added ${productName} to your cart!`);
+        }
+
+        // 4. Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('shadow-lg', 'bg-black/80');
+                header.classList.remove('bg-black/40');
+            } else {
+                header.classList.remove('shadow-lg', 'bg-black/80');
+                header.classList.add('bg-black/40');
+            }
+        });
+
+        // 5. Mobile Menu Toggle Logic
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeMenuBtn = document.getElementById('close-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        function toggleMobileMenu() {
+            if (mobileMenu.classList.contains('opacity-0')) {
+                // Open menu
+                mobileMenu.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            } else {
+                // Close menu
+                mobileMenu.classList.add('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = 'auto'; // Restore scrolling
+            }
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        closeMenuBtn.addEventListener('click', toggleMobileMenu);
+        
+        // Close menu when a link is clicked
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', toggleMobileMenu);
+        });
+    </script>
+</body>
+</html>
